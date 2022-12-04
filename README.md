@@ -1,1 +1,2 @@
-# jelilakjaly.github.io
+# Blog
+This is a blog.
