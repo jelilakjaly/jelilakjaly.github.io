@@ -4,13 +4,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Blog</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .wrapper {
+      margin: 0 auto;
+      max-width: 800px;
+      padding: 20px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>Blog</h1>
-  <h2>How to make simple transaction with cardano-cli</h2>
-  <p>This is a blog</p>
+  <div class="wrapper">
+    <h1>Blog</h1>
+    <h2>How to make simple transaction with cardano-cli</h2>
+    <p>For this to work, first we need to install the cardano-node (pre-prod) and cardano-cli.</p>
+    <p>First we need to create payment address. For that we use the following command.</p>
+    <pre>
+      cardano-cli address key-gen \
+        --verification-key-file payment1.vkey \
+        --signing-key-file payment1.skey
+    </pre>
+    <p>This will create two files in the current directory. <em>payment1.vkey</em> is used to create the addrees and
+      <em>payment1.skey</em> is used to sign the transactions.
+    </p>
+    <p>No we need to create the address.</p>
+    <pre>
+      cardano-cli address build \
+        --payment-verification-key-file payment1.vkey \ 
+        --out-file payment1.addr \
+        --testnet-magic 1
+    </pre>
+    <p>This will create the <em>payment1.addr</em> file which contains the address that is associated with
+      <em>payment1.vkey</em>. And because we are creating this address on the pre-prod testnet, we use
+      <em>--testnet-magic 1</em>.
+    </p>
+    <p>We need to have some test ADA (tADA) in this address to send it elsewhere. For that, open the
+      <em>payment1.addr</em> file and copy the address. Then go to <a
+        href="https://docs.cardano.org/cardano-testnet/tools/faucet">Testnets Faucet</a>, paste your address there and
+      request your tADA.
+    </p>
+  </div>
 </body>
 
 </html>
