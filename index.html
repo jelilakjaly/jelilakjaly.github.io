@@ -22,7 +22,6 @@
 
 <body>
   <div class="wrapper">
-    <h1>Blog</h1>
     <h2>How to make simple transaction with cardano-cli</h2>
     <p>For this to work, first we need to install the cardano-node (pre-prod) and cardano-cli.</p>
     <p>First we need to create payment address. For that we use the following command.</p>
@@ -47,9 +46,86 @@
     </p>
     <p>We need to have some test ADA (tADA) in this address to send it elsewhere. For that, open the
       <em>payment1.addr</em> file and copy the address. Then go to <a
-        href="https://docs.cardano.org/cardano-testnet/tools/faucet">Testnets Faucet</a>, paste your address there and
+        href="https://docs.cardano.org/cardano-testnet/tools/faucet">Testnets Faucet</a>, paste your address there,
+      choose the PreProd and
       request your tADA.
     </p>
+    <p>If you want to check if the tADAs arrived, you can run the command bellow.</p>
+    <pre>
+      cardano-cli query utxo  \ 
+        --address $(cat payment1.addr) \ 
+        --testnet-magic 1
+    </pre>
+    <p>You will see something like this.</p>
+    <pre>
+      TxHash                                                             TxIx       Amount
+      --------------------------------------------------------------------------------------
+      058da1ded3e760fc871bad52c0aa36378097a444b8ccca761b7d420873d1c7a5     0        10000000000 lovelace + TxOutDatumNone      
+    </pre>
+    <p>Now we can see the transaction hash, transaction index and the amount in loveloace (1 ADA = 1000000 lovelace).
+      We can see that we have 10000 ADA in the address that we generated.
+    </p>
+    <p>Now we want to send some ADA in our address to some other address. So lets create another address. For that we do
+      what we did above again.</p>
+    <pre>
+      cardano-cli address key-gen \
+        --verification-key-file payment2.vkey \
+        --signing-key-file payment2.skey
+
+      cardano-cli address build \
+        --payment-verification-key-file payment2.vkey \ 
+        --out-file payment2.addr \
+        --testnet-magic 1
+    </pre>
+    <p>Now our current folder looks like this.</p>
+    <pre>
+      .
+      ├── payment1.addr
+      ├── payment1.skey
+      ├── payment1.vkey
+      ├── payment2.addr
+      ├── payment2.skey
+      └── payment2.vkey
+    </pre>
+    <p>Now we want to send 100 ADA from address 1 to address 2. For that we need to first get the protocol parameters
+      that are used to calculate the fee.</p>
+    <pre>
+      cardano-cli query protocol-parameters \
+        --testnet-magic 1 \
+        --out-file protocol.json
+    </pre>
+    <p>This would put the protocol parametes into the <em>protocol.json</em> file.</p>
+    <p>Lets once again get the transaction hash and index of the utxo to spend.</p>
+    <pre>
+      cardano-cli query utxo \
+        --address $(cat payment1.addr) \
+        --testnet-magic 1
+    </pre>
+    <p>This will produce a result like this.</p>
+    <pre>
+      TxHash                                                             TxIx       Amount
+      --------------------------------------------------------------------------------------
+      058da1ded3e760fc871bad52c0aa36378097a444b8ccca761b7d420873d1c7a5     0        10000000000 lovelace + TxOutDatumNone      
+    </pre>
+    <p>First we create a draft and save it in <em>tx.draft</em>.</p>
+    <pre>
+      cardano-cli transaction build-raw \
+        --tx-in 058da1ded3e760fc871bad52c0aa36378097a444b8ccca761b7d420873d1c7a5#0 \
+        --tx-out $(cat payment2.addr)+0 \
+        --tx-out $(cat payment1.addr)+0 \
+        --fee 0 \
+        --out-file tx.draft
+    </pre>
+    <p>For <em>--tx-in</em> we use the following syntax: <em>TxHash#TxIx</em> where <em>TxHash</em> is the transaction
+      hash and <em>TxIx</em> is the index. For <em>--tx-out</em> we use: <em>TxOut+Lovelace</em> where <em>TxOut</em> is
+      the hex encoded address followed by the amount in <em>Lovelace</em>. For the transaction draft <em>--tx-out</em>
+      and <em>--fee</em> can be set to zero.</p>
+
+
+
+
+
+
   </div>
 </body>
 
