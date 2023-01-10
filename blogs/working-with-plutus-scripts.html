@@ -68,14 +68,16 @@
     <pre>
                                  TxHash                                 TxIx        Amount
       --------------------------------------------------------------------------------------
-      3f6dedb30f09898400ecb3873f3c4c8bbaa7f687f72675c5aae52511cc942e41     0        10000000000 lovelace + TxOutDatumNone
+      ca82fbebfb3aac3b8221e1c51f058446b79569bee81e2386ecb6f7df23b60663     0        10000000000 lovelace + TxOutDatumNone
     </pre>
 
+    <!--
     <p>Let's save TxHash and TxIx and the amount in variables. We need them later.</p>
     <pre>
       txhash="3f6dedb30f09898400ecb3873f3c4c8bbaa7f687f72675c5aae52511cc942e41"
       txix=0
     </pre>
+  -->
 
     <p>Now we calculate the address of the script.</p>
     <pre>
@@ -109,66 +111,22 @@
       datum_hash="03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"
     </pre>
 
-    <p>We also need to save the protocol parameters in a file.</p>
-
+    <p>Let's send 100 ADA to the script address.</p>
     <pre>
-      cardano-cli query protocol-parameters \
-        --out-file protocol.json \
-        --testnet-magic 1
-    </pre>
-
-    <p>Now we make the transaction body.</p>
-    <pre>
-      cardano-cli transaction build-raw \
-        --fee 0 \
-        --tx-in $txhash#$txix \
-        --tx-out $script_address+0 \
-        --tx-out $address+0 \
-        --tx-out-datum-hash $datum_hash \
-        --out-file tx.draft
-    </pre>
-
-    <p>Calcualte the fee</p>
-    <pre>
-      cardano-cli transaction calculate-min-fee \
-        --tx-body-file tx.draft \
+      cardano-cli transaction build \
         --testnet-magic 1 \
-        --protocol-params-file protocol.json \
-        --tx-in-count 1 \
-        --tx-out-count 2 \
-        --witness-count 1 
-    </pre>
-    <p>The result:</p>
-    <pre>
-      175797 Lovelace
-    </pre>
-
-    <p>Save the amount in a variable.</p>
-    <pre>
-      fee=174169
-    </pre>
-
-    <p>Build the transaction. We are sending 1000 ADA to the script address.</p>
-    <pre>
-      cardano-cli transaction build-raw \
-        --fee $fee \
-        --tx-in $txhash#$txix \
-        --tx-out $script_address+1000000000 \
-        --tx-out $address+8999824203 \
+        --tx-in ca82fbebfb3aac3b8221e1c51f058446b79569bee81e2386ecb6f7df23b60663#0 \
+        --tx-out $script_address+100000000 \
         --tx-out-datum-hash $datum_hash \
+        --change-address $address \
         --out-file tx.raw
     </pre>
-
-    <p>Now sign the transaction.</p>
     <pre>
       cardano-cli transaction sign \
-        --tx-body-file tx.raw \
         --signing-key-file payment.skey \
-        --testnet-magic 1 \
+        --tx-file tx.raw \
         --out-file tx.signed
     </pre>
-
-    <p>Submit the transaction.</p>
     <pre>
       cardano-cli transaction submit \
         --tx-file tx.signed  \
@@ -181,92 +139,127 @@
         --address $script_address \
         --testnet-magic 1
     </pre>
-    <p>The result:</p>
+    <p>The result will have our output with datum hash.</p>
     <pre>
                                  TxHash                                 TxIx        Amount
-      --------------------------------------------------------------------------------------
-      1690148eab2c78586f1bc15e14681d8e8d9f1c6be7e3c2414cad08b32a8bd302     0        1000000000 lovelace + TxOutDatumNone
+      --------------------------------------------------------------------------------------      
+      a65f4c73eaeab748337bdbc96e295bdae4df0603c4e44b4eb465564bda59c081     0        100000000 lovelace + TxOutDatumHash ScriptDataInBabbageEra "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"
     </pre>
+    <p class="info">The output could have more utxos in it because other people can make this address and send funds to
+      it.</p>
 
     <h3>Spending ADA at the script address</h3>
 
-    <p>We have 1000 ADA in our script address. Let's send 500 ADA to our regular address that we created earlier. But
-      first lets save TxHash and TxIx in variables.</p>
+    <p>We have 100 ADA in our script address. Let's send 50 ADA to our regular address that we created earlier. But
+      before we do that, let's creat a utxo with only 5 ADA in it to use as a collateral. For that, we send 5 ADA to
+      ourselves.</p>
 
-    <pre>
-      stxhash="1690148eab2c78586f1bc15e14681d8e8d9f1c6be7e3c2414cad08b32a8bd302"
-      stxix=0
-    </pre>
-    <!--
-    <p>Let's check the old address.</p>
+    <p>Let's check our address first.</p>
     <pre>
       cardano-cli query utxo \
-        --address $address \
-        --testnet-magic 1
+        --testnet-magic 1 \
+        --address $address 
     </pre>
     <p>The result:</p>
     <pre>
                                  TxHash                                 TxIx        Amount
       --------------------------------------------------------------------------------------
-      b55d408228081973be6f850c03c132ed7eacc12d645ac0d45c053b6b30576ff3     1        8999825831 lovelace + TxOutDatumNone
+      a65f4c73eaeab748337bdbc96e295bdae4df0603c4e44b4eb465564bda59c081     1        9899832651 lovelace + TxOutDatumNone
     </pre>
-    <p>Save the TxHash and TxIx in a variable.</p>
+
+    <p>Now let's send 5 ADA to ourselves.</p>
     <pre>
-      txhash="b55d408228081973be6f850c03c132ed7eacc12d645ac0d45c053b6b30576ff3"
-      txix=1
-    </pre>
-  -->
-    <p>Let's build the transaction draft for spending the script address.</p>
-    <pre>
-       cardano-cli transaction build-raw \
-         --fee 0 \
-         --tx-in $stxhash#$stxix \
-         --tx-out $address+0 \
-         --tx-out $script_address+0 \
-         --out-file stx.draft
-    </pre>
-    <p>Calcualte the fee:</p>
-    <pre>
-      cardano-cli transaction calculate-min-fee \
-        --tx-body-file stx.draft \
+      cardano-cli transaction build \
         --testnet-magic 1 \
-        --protocol-params-file protocol.json \
-        --tx-in-count 1 \
-        --tx-out-count 2 \
-        --witness-count 1
+        --tx-in a65f4c73eaeab748337bdbc96e295bdae4df0603c4e44b4eb465564bda59c081#1 \
+        --tx-out $address+5000000 \
+        --change-address $address \
+        --out-file tx.raw
+    </pre>
+    <pre>
+      cardano-cli transaction sign \
+        --signing-key-file payment.skey \
+        --tx-file tx.raw \
+        --out-file tx.signed
+    </pre>
+    <pre>
+      cardano-cli transaction submit \
+        --testnet-magic 1 \
+        --tx-file tx.signed
+    </pre>
+
+    <p>We also need the protocol parameters. Let's save that in <em>params.json</em> file.</p>
+    <pre>
+      cardano-cli query protocol-parameters \
+      --testnet-magic 1 \
+      --out-file params.json
+    </pre>
+
+    <p>Now let's check our address again.</p>
+    <pre>
+      cardano-cli query utxo \
+        --testnet-magic 1 \
+        --address $address
     </pre>
     <p>The result:</p>
     <pre>
-      174169 Lovelace
+                                 TxHash                                 TxIx        Amount
+      --------------------------------------------------------------------------------------
+      2d7a393db7b297d26bfb3f07edd448476ccf95f6ad7c409c3bead8170f87f101     0        5000000 lovelace + TxOutDatumNone
+      2d7a393db7b297d26bfb3f07edd448476ccf95f6ad7c409c3bead8170f87f101     1        9894666930 lovelace + TxOutDatumNone      
     </pre>
 
-    <p>Let's save that in a variable:</p>
+    <p>Now let's build the transaction to spend the utxo in our script address.</p>
     <pre>
-      sfee=174169
-    </pre>
-
-    <p>Now we build the raw transaction.</p>
-    <pre>
-      cardano-cli transaction build-raw \
-        --fee $sfee \
-        --tx-in $stxhash#$stxix \
-        --tx-out $address+500000000 \
-        --tx-out $script_address+499825831\
+      cardano-cli transaction build \
+        --testnet-magic 1 \
+        --tx-in 2d7a393db7b297d26bfb3f07edd448476ccf95f6ad7c409c3bead8170f87f101#1 \
+        --tx-in a65f4c73eaeab748337bdbc96e295bdae4df0603c4e44b4eb465564bda59c081#0 \
+        --tx-in-script-file always-succeeds.plutus \
+        --tx-in-datum-value 0 \
+        --tx-in-redeemer-value 0 \
+        --tx-in-collateral 2d7a393db7b297d26bfb3f07edd448476ccf95f6ad7c409c3bead8170f87f101#1 \
+        --tx-out $address+50000000 \
+        --tx-out $script_address+50000000 \
+        --tx-out-datum-hash $datum_hash \
+        --change-address $address \
+        --protocol-params-file params.json \
         --out-file stx.raw
     </pre>
 
-    <p>Now let's sign the transaction:</p>
+    <p>Now let's sign the transaction and submit it.</p>
     <pre>
       cardano-cli transaction sign \
-        --tx-body-file stx.raw \
-        --signing-key-file ?????? \
-        --testnet-magic 1 \
+        --tx-file stx.raw \
+        --signing-key-file payment.skey \
         --out-file stx.signed
     </pre>
+    <pre>
+      cardano-cli transaction submit \
+        --testnet-magic 1 \
+        --tx-file stx.signed
+    </pre>
 
-    <p>It turns out we don't have the key for signing the transaction. So we can't sign this transaction which means we
-      can't submit this transaction to spend the script address. All we have are the script and script address. So how
-      can we spend it.</p>
+    <p>If we check our address we can see that the 50 ADA has arrived.</p>
+    <pre>
+                                 TxHash                                 TxIx        Amount
+      --------------------------------------------------------------------------------------
+      2d7a393db7b297d26bfb3f07edd448476ccf95f6ad7c409c3bead8170f87f101     0        5000000 lovelace + TxOutDatumNone
+      cc491d73357ff3599186725f397823e0a886dc7c2b5e56ba6afb7de1cbe41e7c     0        50000000 lovelace + TxOutDatumNone
+      cc491d73357ff3599186725f397823e0a886dc7c2b5e56ba6afb7de1cbe41e7c     2        9894485024 lovelace + TxOutDatumNone      
+    </pre>
+
+    <p>And if we check the script address, we can see the rest of the 100 ADA (50 ADA) is in that address.</p>
+    <pre>
+      cardano-cli query utxo \
+        --testnet-magic 1 \
+        --address $script_address
+    </pre>
+    <pre>
+                                 TxHash                                 TxIx        Amount
+      cc491d73357ff3599186725f397823e0a886dc7c2b5e56ba6afb7de1cbe41e7c     1        50000000 lovelace + TxOutDatumHash ScriptDataInBabbageEra "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"
+    </pre>
+
 
 
 
